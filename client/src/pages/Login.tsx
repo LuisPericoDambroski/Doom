@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, Lock } from "lucide-react";
+import { Eye, EyeOff, Lock, Gamepad2 } from "lucide-react";
+import { useLocation } from "wouter";
 
 /**
  * Design Philosophy: Glassmorphism with Dynamic Gradient Background
@@ -17,6 +18,7 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [, setLocation] = useLocation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -192,6 +194,18 @@ export default function Login() {
               Cadastre-se
             </a>
           </p>
+
+          {/* Game button */}
+          <div className="mt-8 pt-6 border-t border-white/20">
+            <Button
+              type="button"
+              onClick={() => setLocation("/game")}
+              className="w-full bg-gray-700/60 hover:bg-gray-600/60 text-gray-100 font-semibold py-2.5 rounded-xl transition-all duration-200 flex items-center justify-center space-x-2"
+            >
+              <Gamepad2 className="w-5 h-5" />
+              <span>Jogar Doom Clone</span>
+            </Button>
+          </div>
         </div>
 
         {/* Illustration - shown on larger screens */}
