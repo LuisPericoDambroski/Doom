@@ -6,6 +6,7 @@ import { Eye, EyeOff, Lock, Gamepad2 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { getLoginUrl } from "@/const";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -47,6 +48,14 @@ export default function Login() {
       toast.error(error instanceof Error ? error.message : "Erro ao registrar");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleOAuthLogin = () => {
+    try {
+      window.location.href = getLoginUrl();
+    } catch (error) {
+      toast.error("Erro ao iniciar login com OAuth");
     }
   };
 
@@ -187,6 +196,7 @@ export default function Login() {
           <div className="grid grid-cols-2 gap-3">
             <Button
               type="button"
+              onClick={handleOAuthLogin}
               variant="outline"
               className="border-white/20 bg-white/5 text-gray-200 hover:bg-white/10 transition-all"
             >
@@ -194,6 +204,7 @@ export default function Login() {
             </Button>
             <Button
               type="button"
+              onClick={handleOAuthLogin}
               variant="outline"
               className="border-white/20 bg-white/5 text-gray-200 hover:bg-white/10 transition-all"
             >
