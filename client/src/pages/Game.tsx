@@ -8,6 +8,7 @@ export default function Game() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [, setLocation] = useLocation();
   const { logout, user } = useAuth();
+  const scriptsLoadedRef = useRef(false);
 
   const handleLogout = () => {
     logout();
@@ -16,13 +17,17 @@ export default function Game() {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || scriptsLoadedRef.current) return;
 
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
     const loadGameScripts = async () => {
       try {
+        // Limpar scripts anteriores
+        const oldScripts = document.querySelectorAll('script[src*="game.js"], script[src*="dungeongenerator.js"]');
+        oldScripts.forEach(script => script.remove());
+
         if (user?.email) {
           const username = user.email.split('@')[0];
           localStorage.setItem("username", username);
@@ -30,12 +35,19 @@ export default function Game() {
 
         const dungeonScript = document.createElement("script");
         dungeonScript.src = "/dungeongenerator.js";
+        dungeonScript.async = false;
         document.body.appendChild(dungeonScript);
 
         dungeonScript.onload = () => {
           const gameScript = document.createElement("script");
           gameScript.src = "/game.js";
+          gameScript.async = false;
           document.body.appendChild(gameScript);
+          scriptsLoadedRef.current = true;
+        };
+
+        dungeonScript.onerror = () => {
+          console.error("Erro ao carregar dungeongenerator.js");
         };
       } catch (error) {
         console.error("Erro ao carregar scripts do jogo:", error);
