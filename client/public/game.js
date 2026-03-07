@@ -1,8 +1,14 @@
-const canvas = document.getElementById("gameCanvas")
-const ctx = canvas.getContext("2d")
+(function() {
+  if (window.gameLoaded) return
+  window.gameLoaded = true
 
-canvas.width = window.innerWidth
-canvas.height = window.innerHeight
+  let canvas = document.getElementById("gameCanvas")
+  if (!canvas) return
+  
+  let ctx = canvas.getContext("2d")
+  
+  canvas.width = window.innerWidth
+  canvas.height = window.innerHeight
 
 const WIDTH = canvas.width
 const HEIGHT = canvas.height
@@ -114,8 +120,12 @@ const player = {
   angle: 0
 }
 
-let enemies = []
-let keys = {}
+if (!window.gameInitialized) {
+  window.gameInitialized = true
+}
+
+let enemies = window.enemies || []
+let keys = window.keys || {}
 
 // Tipos de inimigos
 const enemyTypes = {
@@ -751,5 +761,5 @@ function initGame() {
   gameState = "menu"
   gameLoop()
 }
-
 initGame()
+})()
