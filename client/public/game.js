@@ -20,6 +20,9 @@ let gameOver = false
 let enemiesKilled = 0
 let maxEnemiesPerRoom = 10
 let gunRecoil = 0
+let score = 0
+let gameStartTime = 0
+let gameDuration = 0
 
 // Configurações do jogo
 let gameSettings = {
@@ -32,6 +35,7 @@ let gameSettings = {
 let gameState = "menu" // menu, gameMode, playing, gameover, paused, settings
 let username = ""
 let selectedGameMode = "singleplayer"
+window.scoreSubmitted = false
 let pausedMenuIndex = 0
 
 const enemySprite = new Image()
@@ -295,8 +299,38 @@ function drawGameOver() {
   ctx.textAlign = "center"
   ctx.fillText("GAME OVER", WIDTH / 2, HEIGHT / 2)
   ctx.font = "30px sans-serif"
-  ctx.fillText("Pressione ESC para voltar", WIDTH / 2, HEIGHT / 2 + 80)
+  ctx.fillText("Score: " + score, WIDTH / 2, HEIGHT / 2 + 50)
+  ctx.fillText("Pressione ESC para voltar", WIDTH / 2, HEIGHT / 2 + 100)
   ctx.textAlign = "left"
+  
+  // Salvar score no banco de dados
+  if (!window.scoreSubmitted) {
+    window.scoreSubmitted = true
+    saveScore()
+  }
+}
+
+async function saveScore() {
+  try {
+    const response = await fetch('/api/trpc/scores.save', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        json: {
+          score: score,
+          gameMode: selectedGameMode,
+          enemiesKilled: enemiesKilled,
+          timePlayedSeconds: Math.floor(gameDuration / 1000)
+        }
+      }),
+      credentials: 'include'
+    })
+    console.log('Score saved:', response.status)
+  } catch (error) {
+    console.error('Failed to save score:', error)
+  }
 }
 
 function drawBackground() {
@@ -360,6 +394,14 @@ function drawPauseMenu() {
 
 function gameLoop() {
   if (gameState === "playing") {
+    if (gameStartTime === 0) {
+      gameStartTime = Date.now()
+      score = 0
+      window.scoreSubmitted = false
+    }
+    gameDuration = Date.now() - gameStartTime
+    score = enemiesKilled * 100 + Math.floor(gameDuration / 1000) * 10
+    
     movePlayer()
     drawBackground()
     castRays()

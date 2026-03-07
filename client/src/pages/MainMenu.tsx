@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
+import Leaderboard from "@/components/Leaderboard";
 
 export default function MainMenu() {
   const [, setLocation] = useLocation();
@@ -53,22 +54,27 @@ export default function MainMenu() {
       {/* CRT border */}
       <div className="absolute inset-0 border-4 border-red-900/50 pointer-events-none" />
 
-      <div className="relative z-10 text-center">
+      <div className="relative z-10 w-full max-w-5xl mx-auto px-4">
         {/* Title */}
-        <h1 className="text-6xl font-bold text-red-600 mb-4" style={{ fontFamily: "monospace", textShadow: "0 0 20px rgba(220, 20, 60, 0.8)" }}>
+        <h1 className="text-6xl font-bold text-red-600 mb-2 text-center" style={{ fontFamily: "monospace", textShadow: "0 0 20px rgba(220, 20, 60, 0.8)" }}>
           DOOM
         </h1>
-        <p className="text-red-500 text-lg mb-12" style={{ fontFamily: "monospace" }}>
+        <p className="text-red-500 text-lg mb-8 text-center" style={{ fontFamily: "monospace" }}>
           Welcome, {username}
         </p>
 
+        {/* Leaderboard */}
+        <div className="mb-12">
+          <Leaderboard />
+        </div>
+
         {/* Menu */}
-        <div className="space-y-4">
+        <div className="space-y-4 flex flex-col items-center">
           {menuItems.map((item, index) => (
             <button
               key={index}
               onClick={item.action}
-              className={`block w-64 py-4 text-2xl font-bold transition-all ${
+              className={`w-64 py-4 text-2xl font-bold transition-all ${
                 selectedIndex === index
                   ? "bg-red-600 text-black shadow-lg shadow-red-600/50 scale-105"
                   : "bg-black border-2 border-red-600 text-red-600 hover:border-red-400"
@@ -81,7 +87,7 @@ export default function MainMenu() {
         </div>
 
         {/* Instructions */}
-        <div className="mt-16 text-red-900 text-xs" style={{ fontFamily: "monospace" }}>
+        <div className="mt-12 text-red-900 text-xs" style={{ fontFamily: "monospace" }}>
           <p>USE ARROW KEYS OR WASD TO NAVIGATE</p>
           <p>PRESS ENTER TO SELECT</p>
         </div>

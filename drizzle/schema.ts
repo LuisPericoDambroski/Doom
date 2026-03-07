@@ -40,4 +40,21 @@ export const localAuth = mysqlTable("localAuth", {
 export type LocalAuth = typeof localAuth.$inferSelect;
 export type InsertLocalAuth = typeof localAuth.$inferInsert;
 
+/**
+ * Game scores table for leaderboard.
+ * Stores player scores with timestamp for ranking.
+ */
+export const gameScores = mysqlTable("gameScores", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  score: int("score").notNull(),
+  gameMode: varchar("gameMode", { length: 64 }).default("singleplayer").notNull(),
+  enemiesKilled: int("enemiesKilled").default(0).notNull(),
+  timePlayedSeconds: int("timePlayedSeconds").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type GameScore = typeof gameScores.$inferSelect;
+export type InsertGameScore = typeof gameScores.$inferInsert;
+
 // TODO: Add your tables here

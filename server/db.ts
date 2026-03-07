@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, localAuth, InsertLocalAuth } from "../drizzle/schema";
+import { InsertUser, users, localAuth, InsertLocalAuth, gameScores, InsertGameScore } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import crypto from 'crypto';
 
@@ -159,6 +159,82 @@ export async function getUserByEmail(email: string) {
   } catch (error) {
     console.error("[Database] Failed to get user by email:", error);
     throw error;
+  }
+}
+
+/**
+ * Save a game score to the database
+ */
+export async function saveGameScore(score: InsertGameScore): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  try {
+    await db.insert(gameScores).values(score);
+  } catch (error) {
+    console.error("[Database] Failed to save game score:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get top scores from the database (leaderboard)
+ */
+export async function getTopScores(limit: number = 10) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get scores: database not available");
+    return [];
+  }
+
+  try {
+    const result = await db
+      .select({
+        id: gameScores.id,
+        userId: gameScores.userId,
+        score: gameScores.score,
+        gameMode: gameScores.gameMode,
+        enemiesKilled: gameScores.enemiesKilled,
+        timePlayedSeconds: gameScores.timePlayedSeconds,
+        createdAt: gameScores.createdAt,
+        userEmail: users.email,
+      })
+      .from(gameScores)
+      .leftJoin(users, eq(gameScores.userId, users.id))
+      .orderBy(desc(gameScores.score))
+      .limit(limit);
+
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get top scores:", error);
+    return [];
+  }
+}
+
+/**
+ * Get user's best score
+ */
+export async function getUserBestScore(userId: number) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get user score: database not available");
+    return undefined;
+  }
+
+  try {
+    const result = await db
+      .select()
+      .from(gameScores)
+      .where(eq(gameScores.userId, userId))
+      .orderBy(desc(gameScores.score))
+      .limit(1);
+
+    return result.length > 0 ? result[0] : undefined;
+  } catch (error) {
+    console.error("[Database] Failed to get user best score:", error);
+    return undefined;
   }
 }
 
