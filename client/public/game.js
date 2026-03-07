@@ -40,8 +40,10 @@ let selectedGameMode = "singleplayer"
 let selectedDifficulty = "normal"
 let gameModeMenuIndex = 0
 let difficultyMenuIndex = 0
+let mainMenuIndex = 0
 window.scoreSubmitted = false
 let pausedMenuIndex = 0
+let settingsMenuIndex = 0
 
 // Configurações de dificuldade
 const difficultySettings = {
@@ -396,12 +398,25 @@ function drawPauseMenu() {
 function drawMainMenu() {
   ctx.fillStyle = "rgba(20,20,40,0.95)"
   ctx.fillRect(0, 0, WIDTH, HEIGHT)
-  ctx.fillStyle = "white"
+  ctx.fillStyle = "red"
   ctx.font = "bold 60px Arial"
   ctx.textAlign = "center"
-  ctx.fillText("DOOM CLONE", WIDTH / 2, 100)
+  ctx.fillText("DOOM", WIDTH / 2, 100)
   ctx.font = "32px Arial"
+  ctx.fillStyle = "white"
   ctx.fillText("Bem-vindo, " + username, WIDTH / 2, 180)
+  
+  const mainMenuOptions = ["NEW GAME", "SETTINGS", "LOGOUT"]
+  ctx.font = "30px Arial"
+  mainMenuOptions.forEach((option, index) => {
+    ctx.fillStyle = mainMenuIndex === index ? "red" : "white"
+    ctx.fillText((mainMenuIndex === index ? "> " : "  ") + option, WIDTH / 2 - 100, 300 + index * 70)
+  })
+  
+  ctx.fillStyle = "gray"
+  ctx.font = "16px Arial"
+  ctx.textAlign = "center"
+  ctx.fillText("Press UP/DOWN or W/S to navigate, ENTER to select", WIDTH / 2, HEIGHT - 50)
   ctx.textAlign = "left"
 }
 
@@ -456,16 +471,23 @@ function drawDifficultyMenu() {
 function drawSettingsMenu() {
   ctx.fillStyle = "rgba(0,0,0,0.9)"
   ctx.fillRect(0, 0, WIDTH, HEIGHT)
-  ctx.fillStyle = "white"
-  ctx.font = "bold 40px Arial"
+  ctx.fillStyle = "red"
+  ctx.font = "bold 50px Arial"
   ctx.textAlign = "center"
-  ctx.fillText("SETTINGS", WIDTH / 2, 80)
+  ctx.fillText("SETTINGS", WIDTH / 2, 100)
+  
+  ctx.fillStyle = "white"
   ctx.font = "24px Arial"
   ctx.textAlign = "left"
-  ctx.fillText("Mouse Sensitivity: " + gameSettings.mouseSensitivity.toFixed(3), 100, 150)
-  ctx.fillText("Use [ and ] to adjust", 100, 190)
+  ctx.fillText("Mouse Sensitivity: " + gameSettings.mouseSensitivity.toFixed(3), 100, 200)
+  ctx.fillText("Use [ and ] to adjust", 100, 240)
+  
+  ctx.fillStyle = "gray"
+  ctx.font = "16px Arial"
+  ctx.textAlign = "center"
+  ctx.fillText("Press ESC to go back", WIDTH / 2, HEIGHT - 50)
   ctx.textAlign = "left"
-}
+
 
 function castRays() {
   for (let i = 0; i < RAYS; i++) {
@@ -545,7 +567,31 @@ function gameLoop() {
 }
 
 document.addEventListener("keydown", (e) => {
-  if (gameState === "paused") {
+  if (gameState === "menu") {
+    if (e.key === "ArrowUp" || e.key === "w" || e.key === "W") {
+      mainMenuIndex = (mainMenuIndex - 1 + 3) % 3
+    } else if (e.key === "ArrowDown" || e.key === "s" || e.key === "S") {
+      mainMenuIndex = (mainMenuIndex + 1) % 3
+    } else if (e.key === "Enter") {
+      if (mainMenuIndex === 0) {
+        gameState = "gameMode"
+        gameModeMenuIndex = 0
+      } else if (mainMenuIndex === 1) {
+        gameState = "settings"
+      } else if (mainMenuIndex === 2) {
+        window.location.href = "/"
+      }
+    }
+  } else if (gameState === "settings" && gameStartTime === 0) {
+    if (e.key === "[") {
+      gameSettings.mouseSensitivity = Math.max(0.0001, gameSettings.mouseSensitivity - 0.0005)
+    } else if (e.key === "]") {
+      gameSettings.mouseSensitivity += 0.0005
+    } else if (e.key === "Escape") {
+      gameState = "menu"
+      mainMenuIndex = 0
+    }
+  } else if (gameState === "paused") {
     if (e.key === "ArrowUp" || e.key === "w" || e.key === "W") {
       pausedMenuIndex = (pausedMenuIndex - 1 + 3) % 3
     } else if (e.key === "ArrowDown" || e.key === "s" || e.key === "S") {
@@ -590,6 +636,9 @@ document.addEventListener("keydown", (e) => {
       gameOver = false
       window.scoreSubmitted = false
     }
+  } else if (gameState === "playing" && e.key === "Escape") {
+    gameState = "paused"
+    pausedMenuIndex = 0
   }
 })
 
