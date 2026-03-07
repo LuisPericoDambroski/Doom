@@ -4,17 +4,10 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
-/**
- * Design Philosophy: Glassmorphism with Dark Gray Palette
- * - Full-screen game canvas with Doom Clone gameplay
- * - Minimal UI overlay with back button
- * - Dark background matching the login page theme
- */
-
 export default function Game() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [, setLocation] = useLocation();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
 
   const handleLogout = () => {
     logout();
@@ -25,19 +18,20 @@ export default function Game() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Set canvas size
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    // Load and initialize game scripts
     const loadGameScripts = async () => {
       try {
-        // Load dungeongenerator.js
+        if (user?.email) {
+          const username = user.email.split('@')[0];
+          localStorage.setItem("username", username);
+        }
+
         const dungeonScript = document.createElement("script");
         dungeonScript.src = "/dungeongenerator.js";
         document.body.appendChild(dungeonScript);
 
-        // Wait for dungeongenerator to load, then load game.js
         dungeonScript.onload = () => {
           const gameScript = document.createElement("script");
           gameScript.src = "/game.js";
@@ -50,7 +44,6 @@ export default function Game() {
 
     loadGameScripts();
 
-    // Handle window resize
     const handleResize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -61,11 +54,10 @@ export default function Game() {
     return () => {
       window.removeEventListener("resize", handleResize);
     };
-  }, []);
+  }, [user]);
 
   return (
     <div className="relative w-full h-screen bg-black overflow-hidden">
-      {/* Game Canvas */}
       <canvas
         ref={canvasRef}
         id="game"
@@ -73,7 +65,6 @@ export default function Game() {
         style={{ display: "block" }}
       />
 
-      {/* Controls Overlay */}
       <div className="absolute top-4 left-4 z-50 flex gap-2">
         <Button
           onClick={() => setLocation("/")}
@@ -93,7 +84,6 @@ export default function Game() {
         </Button>
       </div>
 
-      {/* Game Instructions */}
       <div className="absolute bottom-4 left-4 z-50 text-gray-400 text-xs font-mono max-w-xs">
         <p className="mb-2">
           <strong>Controles:</strong>
@@ -102,7 +92,10 @@ export default function Game() {
           <li>W/A/S/D - Mover</li>
           <li>Mouse - Olhar ao redor (clique para ativar)</li>
           <li>Espaço - Atirar</li>
-          <li>ESC - Sair do jogo</li>
+          <li>S - Configurações</li>
+          <li>Setas - Selecionar modo</li>
+          <li>ENTER - Começar</li>
+          <li>ESC - Menu/Sair</li>
         </ul>
       </div>
     </div>
