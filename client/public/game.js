@@ -343,17 +343,19 @@ async function saveScore() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        json: {
-          score: score,
-          gameMode: selectedGameMode,
-          enemiesKilled: enemiesKilled,
-          timePlayedSeconds: Math.floor(gameDuration / 1000),
-          phase: currentPhase
+        0: {
+          json: {
+            score: Math.floor(score),
+            gameMode: selectedGameMode,
+            enemiesKilled: Math.floor(enemiesKilled),
+            timePlayedSeconds: Math.floor(gameDuration / 1000)
+          }
         }
       }),
       credentials: 'include'
     })
-    console.log('Score saved:', response.status)
+    const data = await response.json()
+    console.log('Score saved:', response.status, data)
   } catch (error) {
     console.error('Failed to save score:', error)
   }
