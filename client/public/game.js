@@ -117,6 +117,50 @@ const player = {
 let enemies = []
 let keys = {}
 
+// Tipos de inimigos
+const enemyTypes = {
+  zombie: {
+    name: "Zombie",
+    speed: 0.02,
+    health: 1,
+    attackCooldown: 60,
+    damage: 1,
+    attackRange: 0.5,
+    color: "red",
+    spawnChance: 0.6
+  },
+  runner: {
+    name: "Runner",
+    speed: 0.04,
+    health: 1,
+    attackCooldown: 80,
+    damage: 1,
+    attackRange: 0.4,
+    color: "#FF6B00",
+    spawnChance: 0.25
+  },
+  tank: {
+    name: "Tank",
+    speed: 0.01,
+    health: 3,
+    attackCooldown: 40,
+    damage: 2,
+    attackRange: 0.6,
+    color: "darkred",
+    spawnChance: 0.1
+  },
+  ranged: {
+    name: "Ranged",
+    speed: 0.015,
+    health: 1,
+    attackCooldown: 100,
+    damage: 1,
+    attackRange: 3.0,
+    color: "#FF00FF",
+    spawnChance: 0.05
+  }
+}
+
 function spawnEnemies() {
   enemies = []
   const enemiesForPhase = 2 + (currentPhase * 2)
@@ -132,10 +176,25 @@ function spawnEnemies() {
       }
     } while (!valid)
     
+    let typeKey = "zombie"
+    const rand = Math.random()
+    let cumulative = 0
+    for (const [key, type] of Object.entries(enemyTypes)) {
+      cumulative += type.spawnChance
+      if (rand < cumulative) {
+        typeKey = key
+        break
+      }
+    }
+    
+    const type = enemyTypes[typeKey]
     enemies.push({
       x: x,
       y: y,
+      type: typeKey,
+      typeData: type,
       alive: true,
+      health: type.health,
       attackCooldown: 0,
       hasAttacked: false
     })
@@ -208,8 +267,8 @@ function updateEnemies() {
     let dy = player.y - e.y
     let dist = Math.sqrt(dx * dx + dy * dy)
 
-    if (dist > 0.2) {
-      let adjustedEnemySpeed = ENEMY_SPEED * currentDifficultySettings.enemySpeedMultiplier
+    if (dist > e.typeData.attackRange) {
+      let adjustedEnemySpeed = e.typeData.speed * currentDifficultySettings.enemySpeedMultiplier
       let stepX = dx / dist * adjustedEnemySpeed
       let stepY = dy / dist * adjustedEnemySpeed
       let nx = e.x + stepX
@@ -221,10 +280,10 @@ function updateEnemies() {
 
     if (e.attackCooldown > 0) e.attackCooldown--
 
-    if (dist < 0.5 && e.attackCooldown <= 0) {
-      lives--
+    if (dist < e.typeData.attackRange && e.attackCooldown <= 0) {
+      lives -= e.typeData.damage
       e.hasAttacked = true
-      e.attackCooldown = 60
+      e.attackCooldown = e.typeData.attackCooldown
       if (lives <= 0) gameOver = true
     }
   })
@@ -346,12 +405,24 @@ function drawEnemies() {
       let screenX = (angle + FOV / 2) / FOV * WIDTH
       let height = HEIGHT / dist
       let y = HEIGHT / 2 - height / 2
+      let width = 40
+      let eyeSize = 10
 
-      ctx.fillStyle = "red"
-      ctx.fillRect(screenX - 20, y, 40, height)
+      ctx.fillStyle = e.typeData.color
+      ctx.fillRect(screenX - width / 2, y, width, height)
+      
+      if (e.type === "tank") {
+        ctx.fillStyle = "#8B0000"
+        ctx.fillRect(screenX - width / 2, y, width, height * 0.3)
+      } else if (e.type === "ranged") {
+        ctx.fillStyle = "#FF1493"
+        ctx.fillRect(screenX - width / 2 + 5, y + height * 0.2, 5, height * 0.6)
+        ctx.fillRect(screenX + width / 2 - 10, y + height * 0.2, 5, height * 0.6)
+      }
+      
       ctx.fillStyle = "darkred"
-      ctx.fillRect(screenX - 15, y + 10, 10, 10)
-      ctx.fillRect(screenX + 5, y + 10, 10, 10)
+      ctx.fillRect(screenX - eyeSize / 2 - 5, y + 10, eyeSize, eyeSize)
+      ctx.fillRect(screenX + eyeSize / 2 + 5, y + 10, eyeSize, eyeSize)
     }
   })
 }
@@ -505,6 +576,38 @@ function castRays() {
   }
 }
 
+function shoot() {
+  if (ammo <= 0 || gameState !== "playing") return
+  
+  ammo--
+  gunRecoil = 5
+  
+  let closestEnemy = null
+  let closestDist = 2
+  
+  enemies.forEach(e => {
+    if (!e.alive) return
+    let dx = e.x - player.x
+    let dy = e.y - player.y
+    let dist = Math.sqrt(dx * dx + dy * dy)
+    let angle = Math.atan2(dy, dx) - player.angle
+    
+    if (Math.abs(angle) < 0.1 && dist < closestDist) {
+      closestDist = dist
+      closestEnemy = e
+    }
+  })
+  
+  if (closestEnemy) {
+    closestEnemy.health--
+    if (closestEnemy.health <= 0) {
+      closestEnemy.alive = false
+      enemiesKilled++
+      phaseEnemiesKilled++
+    }
+  }
+}
+
 function gameLoop() {
   if (gameState === "playing") {
     if (gameStartTime === 0) {
@@ -516,6 +619,13 @@ function gameLoop() {
     gameDuration = Date.now() - gameStartTime
     let baseScore = enemiesKilled * 100 + Math.floor(gameDuration / 1000) * 10
     score = Math.floor(baseScore * currentDifficultySettings.scoreMultiplier)
+    
+    if (keys[" "]) {
+      shoot()
+      keys[" "] = false
+    }
+    
+    if (gunRecoil > 0) gunRecoil--
     
     movePlayer()
     drawBackground()
