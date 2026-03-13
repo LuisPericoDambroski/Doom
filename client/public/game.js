@@ -484,6 +484,14 @@ function shoot() {
 }
 
 function gameLoop() {
+  // Renderiza o cenário básico sempre para evitar tela preta
+  drawBackground()
+  castRays()
+  drawEnemies()
+  drawGun()
+  drawHUD()
+  drawMiniMap()
+
   if (gameState === "playing") {
     if (gameStartTime === 0) {
       gameStartTime = Date.now()
@@ -503,18 +511,30 @@ function gameLoop() {
     if (gunRecoil > 0) gunRecoil--
     
     movePlayer()
-    drawBackground()
-    castRays()
-    drawEnemies()
     updateEnemies()
-    drawGun()
-    drawHUD()
-    drawMiniMap()
     checkPhaseCompletion()
 
     if (gameOver) {
       drawGameOver()
     }
+  } else if (gameState === "paused") {
+    // Se for MULTIPLAYER, o jogo continua rodando ao fundo
+    if (selectedGameMode === "multiplayer") {
+      gameDuration = Date.now() - gameStartTime
+      updateEnemies()
+      checkPhaseCompletion()
+    }
+    
+    // Desenha o overlay de pausa (já que não temos drawPauseMenu no motor)
+    ctx.fillStyle = "rgba(0,0,0,0.5)"
+    ctx.fillRect(0, 0, WIDTH, HEIGHT)
+    ctx.fillStyle = "white"
+    ctx.font = "40px monospace"
+    ctx.textAlign = "center"
+    ctx.fillText("PAUSED", WIDTH / 2, HEIGHT / 2)
+    ctx.font = "20px monospace"
+    ctx.fillText("PRESS ESC TO RESUME", WIDTH / 2, HEIGHT / 2 + 40)
+    ctx.textAlign = "left"
   }
 
   requestAnimationFrame(gameLoop)
@@ -525,9 +545,14 @@ document.addEventListener("keydown", (e) => {
     keys[e.key.toLowerCase()] = true
   }
   
-  if (gameState === "playing" && e.key === "Escape") {
-    // No jogo, ESC volta para o menu principal do site
-    window.location.href = "/menu"
+  if (e.key === "Escape") {
+    if (gameState === "playing") {
+      gameState = "paused"
+      document.exitPointerLock()
+    } else if (gameState === "paused") {
+      gameState = "playing"
+      canvas.requestPointerLock()
+    }
   }
 })
 
