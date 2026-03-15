@@ -53,7 +53,7 @@
     animFps: 14,
   };
 
-  const GUN_SPRITE = { cols: 6, rows: 2, frames: 5, animFps: 18 };
+  const GUN_SPRITE = { cols: 5, rows: 1, frames: 5, animFps: 18 };
 
   const PLAYER_CHARACTER = {
     rows: 4,
@@ -63,10 +63,10 @@
   };
   const GUN_FRAME_MAP = [
     { r: 0, c: 0 },
-    { r: 1, c: 0 },
-    { r: 1, c: 1 },
-    { r: 1, c: 2 },
-    { r: 0, c: 0 },
+    { r: 0, c: 1 },
+    { r: 0, c: 2 },
+    { r: 0, c: 3 },
+    { r: 0, c: 4 },
   ];
 
   const spriteCache = {};
@@ -115,7 +115,7 @@
         bg = Math.min(bg, d.data[i + 1]);
         bb = Math.min(bb, d.data[i + 2]);
       }
-      const tol = 45;
+      const tol = 48;
       for (let i = 0; i < d.data.length; i += 4) {
         const r = d.data[i], g = d.data[i + 1], b = d.data[i + 2];
         const match = Math.abs(r - br) < tol && Math.abs(g - bg) < tol && Math.abs(b - bb) < tol;
@@ -1000,11 +1000,6 @@
     drawHUD() {
       ctx.fillStyle = "white";
       ctx.font = "20px monospace";
-      ctx.fillText("Ammo: " + this.ammo, 20, 30);
-      ctx.fillText("Vida: " + this.lives + "/5", 20, 60);
-      ctx.fillText("Difficulty: " + this.currentDifficultySettings.name, 20, 90);
-      ctx.fillText("Phase: " + this.currentPhase, 20, 120);
-      ctx.fillStyle = "white";
       ctx.fillText("+", WIDTH / 2 - 5, HEIGHT / 2 + 5);
       ctx.fillStyle = "yellow";
       ctx.textAlign = "right";
@@ -1014,6 +1009,22 @@
       ctx.fillText(this.username, WIDTH / 2, 40);
       ctx.textAlign = "left";
       this.drawMinimap();
+
+      const hudX = WIDTH - 180;
+      const hudY = HEIGHT - 130;
+      ctx.fillStyle = "rgba(0,0,0,0.6)";
+      ctx.fillRect(hudX - 10, hudY - 25, 175, 115);
+      ctx.strokeStyle = "rgba(255,255,255,0.4)";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(hudX - 10, hudY - 25, 175, 115);
+      ctx.fillStyle = "white";
+      ctx.font = "18px monospace";
+      ctx.textAlign = "right";
+      ctx.fillText("Munição: " + this.ammo, hudX + 155, hudY);
+      ctx.fillText("Vida: " + this.lives + "/5", hudX + 155, hudY + 28);
+      ctx.fillText("Dificuldade: " + this.currentDifficultySettings.name, hudX + 155, hudY + 56);
+      ctx.fillText("Fase: " + this.currentPhase, hudX + 155, hudY + 84);
+      ctx.textAlign = "left";
     }
 
     drawMinimap() {

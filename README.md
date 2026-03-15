@@ -2,6 +2,8 @@
 
 > Aplicação full-stack com jogo raycasting (estilo Doom), autenticação, leaderboard e integração Manus para deploy automático.
 
+**Desenvolvido por [Luis Dambroski](https://github.com/LuisPericoDambroski)**
+
 ---
 
 ## Índice
